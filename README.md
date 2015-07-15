@@ -32,7 +32,10 @@ This would only change the hash property of the latest block, but leave all othe
 
 ### Detecting forks
 
-You can call `callback` will be called, when a chain re-organisation (fork) is detected, while your applications is running.
+You can call `Blocks.detectFork(callback)` to detect chain re-organisation (forks), while your applications is running.
+This detection, is checking the new incoming blocks `parentHash`, with the last known block you have.
+
+**Note** The fork detection can currently be wrong, when you're importing blocks, as they can come in different orders.
 
 ```js
 Blocks.detectFork(function(oldBlock, newBlock){
