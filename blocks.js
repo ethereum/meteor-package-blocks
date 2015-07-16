@@ -12,8 +12,8 @@ The accounts collection, with some ethereum additions.
 @constructor
 */
 
-Blocks = new Mongo.Collection('ethereum_blocks', {connection: null});
-new PersistentMinimongo(Blocks);
+EthBlocks = new Mongo.Collection('ethereum_blocks', {connection: null});
+new PersistentMinimongo(EthBlocks);
 
 
 /**
@@ -21,14 +21,14 @@ Gives you reactively the lates block.
 
 @property latest
 */
-Object.defineProperty(Blocks, 'latest', {
+Object.defineProperty(EthBlocks, 'latest', {
     get: function () {
-        return Blocks.findOne({}, {sort: {number: -1}}) || {};
+        return EthBlocks.findOne({}, {sort: {number: -1}}) || {};
     },
     set: function (values) {
-        var block = Blocks.findOne({}, {sort: {number: -1}}) || {};
+        var block = EthBlocks.findOne({}, {sort: {number: -1}}) || {};
         values = values || {};
-        Blocks.update(block._id, {$set: values});
+        EthBlocks.update(block._id, {$set: values});
     }
 });
 
@@ -37,7 +37,7 @@ Stores all the callbacks
 
 @property _forkCallbacks
 */
-Blocks._forkCallbacks = [];
+EthBlocks._forkCallbacks = [];
 
 
 /**
@@ -45,7 +45,7 @@ Start looking for new blocks
 
 @method init
 */
-Blocks.init = function(){
+EthBlocks.init = function(){
     observeLatestBlocks();
 };
 
@@ -54,8 +54,26 @@ Add callbacks to detect forks
 
 @method detectFork
 */
-Blocks.detectFork = function(cb){
-    Blocks._forkCallbacks.push(cb);
+EthBlocks.detectFork = function(cb){
+    EthBlocks._forkCallbacks.push(cb);
+};
+
+/**
+Update the block info and adds additional properties.
+
+@method updateBlock
+@param {Object} block
+*/
+function updateBlock(block){
+    block.difficulty = block.difficulty.toString(10);
+    block.totalDifficulty = block.totalDifficulty.toString(10);
+
+    web3.eth.getGasPrice(function(e, gasPrice){
+        if(!e) {
+            block.gasPrice = gasPrice.toString(10);
+            EthBlocks.upsert('bl_'+ block.hash.replace('0x','').substr(0,20), block);
+        }
+    });
 };
 
 /**
@@ -64,16 +82,12 @@ Additionally cap the collection to 50 blocks
 
 @method observeLatestBlocks
 */
-observeLatestBlocks = function(){
+function observeLatestBlocks(){
 
     // get the latest block immediately
     web3.eth.getBlock('latest', function(e, block){
         if(!e) {
-
-            block.difficulty = block.difficulty.toString(10);
-            block.totalDifficulty = block.totalDifficulty.toString(10);
-
-            Blocks.upsert('bl_'+ block.number, block);
+            updateBlock(block);
         }
     });
 
@@ -81,51 +95,34 @@ observeLatestBlocks = function(){
     web3.eth.filter('latest').watch(function(e, hash){
         if(!e) {
             web3.eth.getBlock(hash, function(e, block){
-                var oldBlock = Blocks.latest;
+                var oldBlock = EthBlocks.latest;
 
                 // console.log('BLOCK', block.number);
+
+                // if(!oldBlock)
+                //     console.log('No previous block found: '+ --block.number);
 
                 // CHECK for FORK
                 if(oldBlock && oldBlock.hash !== block.parentHash) {
                     // console.log('FORK detected from Block #'+ oldBlock.number + ' -> #'+ block.number +'!');
 
-                    _.each(Blocks._forkCallbacks, function(cb){
+                    _.each(EthBlocks._forkCallbacks, function(cb){
                         if(_.isFunction(cb))
                             cb(oldBlock, block);
-                    })
-                }
-
-                // if(!oldBlock)
-                //     console.log('No previous block found: '+ --block.number);
-
-                block.difficulty = block.difficulty.toString(10);
-                block.totalDifficulty = block.totalDifficulty.toString(10);
-
-                Blocks.upsert('bl_'+ block.number, block);
-
-                // drop the 50th block
-                if(Blocks.find().count() > 50) {
-                    var count = 0;
-                    _.each(Blocks.find({}, {sort: {number: -1}}).fetch(), function(bl){
-                        count++;
-                        if(count > 20)
-                            Blocks.remove({_id: bl._id});
                     });
                 }
 
-                // update the current gas price
-                // web3.eth.getGasPrice(function(e, gasPrice){
-                //     if(!e) {
-                //         // update the latest blockchain entry
-                //         var latestBlock = Blocks.findOne({}, {sort: {number: -1}});
-                //         LastBlock.update('latest', {$set: {
-                //             number: latestBlock.number,
-                //             hash: latestBlock.hash,
-                //             gasPrice: gasPrice.toString(10),
-                //             checkpoint: latestBlock.number // TODO set checkoints more smartly
-                //         }});
-                //     }
-                // });
+                updateBlock(block);
+
+                // drop the 50th block
+                if(EthBlocks.find().count() > 50) {
+                    var count = 0;
+                    _.each(EthBlocks.find({}, {sort: {number: -1}}).fetch(), function(bl){
+                        count++;
+                        if(count > 20)
+                            EthBlocks.remove({_id: bl._id});
+                    });
+                }
             });
         }
     });
