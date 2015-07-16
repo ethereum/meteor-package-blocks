@@ -1,7 +1,7 @@
 Package.describe({
   name: 'ethereum:blocks',
   summary: 'Provides informations about the current and last 50 blocks',
-  version: '0.1.2',
+  version: '0.1.3',
   git: 'http://github.com/ethereum/meteor-package-blocks'
 });
 

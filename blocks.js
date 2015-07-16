@@ -1,14 +1,14 @@
 /**
 
-@module Ethereum:accounts
+@module Ethereum:blocks
 */
 
 
 
 /**
-The accounts collection, with some ethereum additions.
+The EthBlocks collection, with some ethereum additions.
 
-@class Accounts
+@class EthBlocks
 @constructor
 */
 
