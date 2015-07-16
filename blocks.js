@@ -59,6 +59,17 @@ EthBlocks.detectFork = function(cb){
 };
 
 /**
+Clear all blocks
+
+@method clear
+*/
+EthBlocks.clear = function(){
+    _.each(EthBlocks.find({}).fetch(), function(block){
+        EthBlocks.remove(block._id);
+    });
+};
+
+/**
 Update the block info and adds additional properties.
 
 @method updateBlock

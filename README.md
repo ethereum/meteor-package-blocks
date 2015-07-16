@@ -52,3 +52,16 @@ EthBlocks.detectFork(function(oldBlock, newBlock){
 ```
 
 Note you can call `EthBlocks.detectFork(cb)` mutliple times, to add multiple callbacks.
+
+
+### Clear all stored blocks
+
+If you switch to a chain, which has a lower block number, you need to delete the stored blocks,
+otherwise `EthBlocks.latest` would always give you the latest block from the wrong chain:
+
+```js
+EthBlocks.clear();
+```
+
+
+
