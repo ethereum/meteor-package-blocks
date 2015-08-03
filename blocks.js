@@ -12,8 +12,12 @@ The EthBlocks collection, with some ethereum additions.
 @constructor
 */
 
+
+
 EthBlocks = new Mongo.Collection('ethereum_blocks', {connection: null});
-new PersistentMinimongo(EthBlocks);
+
+if(typeof PersistentMinimongo !== 'undefined')
+    new PersistentMinimongo(EthBlocks);
 
 
 /**
@@ -69,6 +73,14 @@ EthBlocks.clear = function(){
     });
 };
 
+
+/**
+The global block filter instance.
+
+@property filter
+*/
+var filter = null;
+
 /**
 Update the block info and adds additional properties.
 
@@ -76,6 +88,11 @@ Update the block info and adds additional properties.
 @param {Object} block
 */
 function updateBlock(block){
+
+    // reset the chain, if the current blocknumber is 100 blocks less 
+    if(block.number + 10 < EthBlocks.latest.number)
+        EthBlocks.clear();
+
     block.difficulty = block.difficulty.toString(10);
     block.totalDifficulty = block.totalDifficulty.toString(10);
 
@@ -103,39 +120,52 @@ function observeLatestBlocks(){
     });
 
     // GET the latest blockchain information
-    web3.eth.filter('latest').watch(function(e, hash){
-        if(!e) {
-            web3.eth.getBlock(hash, function(e, block){
-                var oldBlock = EthBlocks.latest;
+    filter = web3.eth.filter('latest').watch(checkLatestBlocks);
 
-                // console.log('BLOCK', block.number);
+};
 
-                // if(!oldBlock)
-                //     console.log('No previous block found: '+ --block.number);
+/**
+The observeLatestBlocks callback used in the block filter.
 
-                // CHECK for FORK
-                if(oldBlock && oldBlock.hash !== block.parentHash) {
-                    // console.log('FORK detected from Block #'+ oldBlock.number + ' -> #'+ block.number +'!');
+@method checkLatestBlocks
+*/
+var checkLatestBlocks = function(e, hash){
+    if(!e) {
+        web3.eth.getBlock(hash, function(e, block){
+            var oldBlock = EthBlocks.latest;
 
-                    _.each(EthBlocks._forkCallbacks, function(cb){
-                        if(_.isFunction(cb))
-                            cb(oldBlock, block);
-                    });
-                }
+            // console.log('BLOCK', block.number);
 
-                updateBlock(block);
+            // if(!oldBlock)
+            //     console.log('No previous block found: '+ --block.number);
 
-                // drop the 50th block
-                if(EthBlocks.find().count() > 50) {
-                    var count = 0;
-                    _.each(EthBlocks.find({}, {sort: {number: -1}}).fetch(), function(bl){
-                        count++;
-                        if(count > 20)
-                            EthBlocks.remove({_id: bl._id});
-                    });
-                }
-            });
-        }
-    });
+            // CHECK for FORK
+            if(oldBlock && oldBlock.hash !== block.parentHash) {
+                // console.log('FORK detected from Block #'+ oldBlock.number + ' -> #'+ block.number +'!');
 
+                _.each(EthBlocks._forkCallbacks, function(cb){
+                    if(_.isFunction(cb))
+                        cb(oldBlock, block);
+                });
+            }
+
+            updateBlock(block);
+
+            // drop the 50th block
+            if(EthBlocks.find().count() > 50) {
+                var count = 0;
+                _.each(EthBlocks.find({}, {sort: {number: -1}}).fetch(), function(bl){
+                    count++;
+                    if(count > 20)
+                        EthBlocks.remove({_id: bl._id});
+                });
+            }
+        });
+
+    // try to re-create the filter on error
+    // TODO: want to do this?
+    } else {
+        filter.stopWatching();
+        filter = web3.eth.filter('latest').watch(checkLatestBlocks);
+    }
 };

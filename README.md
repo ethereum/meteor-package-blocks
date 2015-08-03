@@ -56,8 +56,8 @@ Note you can call `EthBlocks.detectFork(cb)` mutliple times, to add multiple cal
 
 ### Clear all stored blocks
 
-If you switch to a chain, which has a lower block number, you need to delete the stored blocks,
-otherwise `EthBlocks.latest` would always give you the latest block from the wrong chain:
+If you switch to a chain, which has a lower block number EthBlocks will reset your interally cache of the last 50 blocks.
+If you want to do that manually call:
 
 ```js
 EthBlocks.clear();
