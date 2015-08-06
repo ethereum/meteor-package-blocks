@@ -4,6 +4,10 @@ Provides you with an `EthBlocks` collection, which stores the last 50 blocks.
 
 You can query blocks like any other Meteor collection.
 
+## Installation
+
+    $ meteor add ethereum:blocks
+
 ## Usage
 
 Initialize Blocks on the start of your application, as soon as you have a ethereum connection:
