@@ -99,7 +99,7 @@ function updateBlock(block){
     web3.eth.getGasPrice(function(e, gasPrice){
         if(!e) {
             block.gasPrice = gasPrice.toString(10);
-            EthBlocks.upsert('bl_'+ block.hash.replace('0x','').substr(0,20), block);
+            EthBlocks.upsert('bl_'+ block.hash.replace('0x','').substr(0,20), {$set: block});
         }
     });
 };
