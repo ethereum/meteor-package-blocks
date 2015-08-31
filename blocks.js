@@ -132,33 +132,35 @@ The observeLatestBlocks callback used in the block filter.
 var checkLatestBlocks = function(e, hash){
     if(!e) {
         web3.eth.getBlock(hash, function(e, block){
-            var oldBlock = EthBlocks.latest;
+            if(!e) {
+                var oldBlock = EthBlocks.latest;
 
-            // console.log('BLOCK', block.number);
+                // console.log('BLOCK', block.number);
 
-            // if(!oldBlock)
-            //     console.log('No previous block found: '+ --block.number);
+                // if(!oldBlock)
+                //     console.log('No previous block found: '+ --block.number);
 
-            // CHECK for FORK
-            if(oldBlock && oldBlock.hash !== block.parentHash) {
-                // console.log('FORK detected from Block #'+ oldBlock.number + ' -> #'+ block.number +'!');
+                // CHECK for FORK
+                if(oldBlock && oldBlock.hash !== block.parentHash) {
+                    // console.log('FORK detected from Block #'+ oldBlock.number + ' -> #'+ block.number +'!');
 
-                _.each(EthBlocks._forkCallbacks, function(cb){
-                    if(_.isFunction(cb))
-                        cb(oldBlock, block);
-                });
-            }
+                    _.each(EthBlocks._forkCallbacks, function(cb){
+                        if(_.isFunction(cb))
+                            cb(oldBlock, block);
+                    });
+                }
 
-            updateBlock(block);
+                updateBlock(block);
 
-            // drop the 50th block
-            if(EthBlocks.find().count() > 50) {
-                var count = 0;
-                _.each(EthBlocks.find({}, {sort: {number: -1}}).fetch(), function(bl){
-                    count++;
-                    if(count > 20)
-                        EthBlocks.remove({_id: bl._id});
-                });
+                // drop the 50th block
+                if(EthBlocks.find().count() > 50) {
+                    var count = 0;
+                    _.each(EthBlocks.find({}, {sort: {number: -1}}).fetch(), function(bl){
+                        count++;
+                        if(count > 20)
+                            EthBlocks.remove({_id: bl._id});
+                    });
+                }
             }
         });
 
