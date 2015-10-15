@@ -99,7 +99,7 @@ function updateBlock(block){
     web3.eth.getGasPrice(function(e, gasPrice){
         if(!e) {
             block.gasPrice = gasPrice.toString(10);
-            EthBlocks.upsert('bl_'+ block.hash.replace('0x','').substr(0,20), {$set: block});
+            EthBlocks.upsert('bl_'+ block.hash.replace('0x','').substr(0,20), block);
         }
     });
 };
@@ -153,11 +153,12 @@ var checkLatestBlocks = function(e, hash){
                 updateBlock(block);
 
                 // drop the 50th block
-                if(EthBlocks.find().count() > 50) {
+                var blocks = EthBlocks.find({}, {sort: {number: -1}}).fetch();
+                if(blocks.length > 50) {
                     var count = 0;
-                    _.each(EthBlocks.find({}, {sort: {number: -1}}).fetch(), function(bl){
+                    _.each(blocks, function(bl){
                         count++;
-                        if(count > 20)
+                        if(count > 40)
                             EthBlocks.remove({_id: bl._id});
                     });
                 }
