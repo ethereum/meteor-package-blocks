@@ -50,7 +50,9 @@ Start looking for new blocks
 @method init
 */
 EthBlocks.init = function(){
-    observeLatestBlocks();
+    Tracker.nonreactive(function() {
+        observeLatestBlocks();
+    });
 };
 
 /**
