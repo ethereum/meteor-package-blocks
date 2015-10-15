@@ -156,11 +156,11 @@ var checkLatestBlocks = function(e, hash){
 
                 // drop the 50th block
                 var blocks = EthBlocks.find({}, {sort: {number: -1}}).fetch();
-                if(blocks.length > 50) {
+                if(blocks.length >= 5) {
                     var count = 0;
                     _.each(blocks, function(bl){
                         count++;
-                        if(count > 40)
+                        if(count >= 5)
                             EthBlocks.remove({_id: bl._id});
                     });
                 }
