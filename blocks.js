@@ -16,8 +16,8 @@ The EthBlocks collection, with some ethereum additions.
 
 EthBlocks = new Mongo.Collection('ethereum_blocks', {connection: null});
 
-if(typeof PersistentMinimongo !== 'undefined')
-    new PersistentMinimongo(EthBlocks);
+// if(typeof PersistentMinimongo !== 'undefined')
+//     new PersistentMinimongo(EthBlocks);
 
 
 /**
