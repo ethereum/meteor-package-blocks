@@ -50,11 +50,13 @@ Start looking for new blocks
 @method init
 */
 EthBlocks.init = function(){
-
     if(typeof web3 === 'undefined') {
         console.warn('EthBlocks couldn\'t find web3, please make sure to instantiate a web3 object before calling EthBlocks.init()');
         return;
     }
+
+    // clear current block list
+    EthBlocks.clear();
 
     Tracker.nonreactive(function() {
         observeLatestBlocks();
