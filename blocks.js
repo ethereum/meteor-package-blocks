@@ -85,11 +85,11 @@ EthBlocks.clear = function(){
 
 
 /**
-The global block filter instance.
+The global block subscription instance.
 
-@property filter
+@property subscription
 */
-var filter = null;
+var subscription = null;
 
 /**
 Update the block info and adds additional properties.
@@ -130,12 +130,14 @@ function observeLatestBlocks(){
     });
 
     // GET the latest blockchain information
-    filter = web3.eth.filter('latest').watch(checkLatestBlocks);
+    subscription = web3.eth.subscribe('newBlockHeaders', function(error, result) {
+        checkLatestBlocks(error, result ? result.hash : null);
+    });
 
 };
 
 /**
-The observeLatestBlocks callback used in the block filter.
+The observeLatestBlocks callback used in the block subscription.
 
 @method checkLatestBlocks
 */
@@ -174,11 +176,5 @@ var checkLatestBlocks = function(e, hash){
                 }
             }
         });
-
-    // try to re-create the filter on error
-    // TODO: want to do this?
-    } else {
-        filter.stopWatching();
-        filter = web3.eth.filter('latest').watch(checkLatestBlocks);
     }
 };
